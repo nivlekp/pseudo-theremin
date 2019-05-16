@@ -1,0 +1,76 @@
+/*
+ *  HC-SR04 test1.
+ *  Simple oscillator, with pitch changed by distance.
+ *  Author: Tsz Kiu Pang
+ *  Copy from instructables.com
+ *  Date: 13/05/2019
+ */
+
+#define trig1Pin 13
+#define echo1Pin 12
+#define trig2Pin 9
+#define echo2Pin 8
+#define led 11
+#define led2 10
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(trig1Pin, OUTPUT);
+    pinMode(echo1Pin, INPUT);
+    pinMode(led, OUTPUT);
+    pinMode(led2, OUTPUT);
+    pinMode(trig2Pin, OUTPUT);
+    pinMode(echo2Pin, INPUT);
+}
+
+int out;
+int in = 1;
+int trigPin;
+int echoPin;
+long duration, distance;
+
+void loop() {
+    if (in) {
+        trigPin = trig1Pin;
+        echoPin = echo1Pin;
+    } else {
+        trigPin = trig2Pin;
+        echoPin = echo2Pin;
+    }
+
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+
+    // Might want to double check this... trigPin should be high for 10us?
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+
+    duration = pulseIn(echoPin, HIGH);
+    // Double check the math if this is not working...
+    distance = (duration/2)/29.1;
+
+    if (distance < 4) {
+        digitalWrite(led, HIGH);
+        digitalWrite(led2, LOW);
+    }
+    else {
+        digitalWrite(led, LOW);
+        digitalWrite(led2, HIGH);
+    }
+
+    if (distance >= 200 || distance <= 0) {
+        //Serial.println("Out of range");
+    }
+    else {
+        if (in) {
+            out = map(distance, 0, 199, 0, 127);
+        } else {
+            out = map(distance, 0, 199, 128, 255);
+        }
+        Serial.write(out);
+    }
+
+    in = (in+1)%2;
+    delay(100);
+}
